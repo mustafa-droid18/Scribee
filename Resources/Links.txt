@@ -1,3 +1,5 @@
 Object Detection + Sign Language Detection : https://youtube.com/playlist?list=PLgNJO2hghbmhUeJuv7PyVYgzhlgt2TcSr
 
+Sign Language Detection Live : https://www.youtube.com/watch?v=V0Pk_dPU2lY
+
 Speech Recognition using 5 projects : https://www.youtube.com/watch?v=mYUyaKmvu6Y
