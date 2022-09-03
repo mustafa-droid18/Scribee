@@ -46,9 +46,6 @@ def extract_keypoints(results):
     face=np.array([[res.x,res.y,res.z] for res in results.face_landmarks.landmark]).flatten() if results.face_landmarks else np.zeros(468*3)
     return np.concatenate([pose,face,lh,rh]) # RETURNS ALL THE KEYPOINTS IN ONE 2D First 132 values is pose keypoints next is 468 value value of face keypoint and so on
 
-# Path for exported data,numpy arrays
-DATA_PATH = os.path.join('MP_DATA')
-
 # Actions that we try to detect
 actions = np.array(['Hello','Thank You'])
 
