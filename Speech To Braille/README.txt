@@ -1,1 +1,1 @@
-
+This folder contains the codes to convert Speech (i.e .mp3 audio files) to Braille script. The final result is stored as a .png image so that it is suitable for printing. It consists of two codes: Speech to Text & Text to Braille.
