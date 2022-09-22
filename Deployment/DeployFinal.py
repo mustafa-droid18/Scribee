@@ -595,5 +595,3 @@ elif app_mode == 'Video':
             frame = cv2.resize(frame,(0,0), fx=0.8, fy=0.8)
             frame = image_resize(image=frame, width=640)
             stframe.image(frame,channels='BGR', use_column_width=True)
-    cv2.VideoCapture(0).release()
-    cv2.destroyAllWindows()
