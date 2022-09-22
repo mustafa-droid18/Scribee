@@ -160,7 +160,7 @@ sklearn==0.0
 smmap==5.0.0
 sounddevice==0.4.5
 stack-data==0.2.0
-streamlit==1.12.2
+streamlit==1.10.0
 tabulate==0.8.10
 tangled-up-in-unicode==0.2.0
 tb-nightly==2.10.0a20220811
