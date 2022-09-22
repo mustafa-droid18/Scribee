@@ -337,7 +337,7 @@ model.add(Dense(32, activation='relu'))
 model.add(Dense(actions.shape[0], activation='softmax'))
 model.summary()
 model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4), loss='categorical_crossentropy', metrics=['categorical_accuracy'])
-model.load_weights('Trained_on_all_letters.h5')
+model.load_weights('.\Trained_on_all_letters.h5')
 
 
 st.title('Scribee!')
