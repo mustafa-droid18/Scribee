@@ -496,13 +496,7 @@ elif app_mode == 'Video':
 
     st.set_option('deprecation.showfileUploaderEncoding', False)
 
-    use_webcam = st.sidebar.button('Use Webcam')
-    #record = st.sidebar.checkbox("Record Video")
-
-    #if record:
-        #st.checkbox('Recording', True)
-
-    #st.sidebar.markdown('---')
+    use_webcam = st.sidebar.checkbox('Use Webcam')
 
     ## Add Sidebar and Window style
     st.markdown(
@@ -526,99 +520,87 @@ elif app_mode == 'Video':
     st.sidebar.markdown('---')
 
     ## Get Video
-    stframe = st.empty()
-    video = cv2.VideoCapture(0)
+    if use_webcam:
+        stframe = st.empty()
+        video = cv2.VideoCapture(0)
 
-    width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps_input = int(video.get(cv2.CAP_PROP_FPS))
+        width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps_input = int(video.get(cv2.CAP_PROP_FPS))
 
-    
-    sequence = []
-    sentence=[]
-    predictions=[]
-    no_hand_count = 0
-    threshold = 0.5
-    say_check = False
-    cap = cv2.VideoCapture(0)
-    letter = ""
-    pre_letter = ""
-    word=""
-    word1=""
+        
+        sequence = []
+        sentence=[]
+        predictions=[]
+        no_hand_count = 0
+        threshold = 0.5
+        say_check = False
+        cap = cv2.VideoCapture(0)
+        letter = ""
+        pre_letter = ""
+        word=""
+        word1=""
 
-    kpil, kpil2 = st.columns(2)
+        kpil, kpil2 = st.columns(2)
 
-    with kpil:
-        st.markdown('**Word**')
-        kpil_text = st.markdown('')
+        with kpil:
+            st.markdown('**Word**')
+            kpil_text = st.markdown('')
 
-    with kpil2:
-        st.markdown('**Letter**')
-        kpil2_text = st.markdown('')
+        with kpil2:
+            st.markdown('**Letter**')
+            kpil2_text = st.markdown('')
 
-    #with kpil3:
-        #st.markdown('**Image Resolution**')
-        #kpil3_text = st.markdown('0')
+        st.markdown('<hr/>', unsafe_allow_html=True)
 
-    st.markdown('<hr/>', unsafe_allow_html=True)
+        with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
+            while cap.isOpened():
 
-    with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
-        while cap.isOpened():
+                # Read feed
+                ret, frame = cap.read()
 
-            # Read feed
-            ret, frame = cap.read()
+                # Make detections
+                image, results = mediapipe_detection(frame, holistic)
+                
+                # Draw landmarks
+                draw_styled_landmarks(image, results)
+                
+                # 2. Prediction logic
+                keypoints = extract_keypoints(results)
+                if not keypoints.any():
+                    no_hand_count += 1 
+                    if no_hand_count > 5:
+                        sequence = []
+                        sentence = []
+                        pre_letter = ''
+                        letter = ''
+                        if no_hand_count>15:
+                            word1=''
+                            word =''
+                            kpil_text.write(f"<h1 style='text-align: center; color:red;'>{word}</h1>", unsafe_allow_html=True)
+                            kpil2_text.write(f"<h1 style='text-align: center; color:red;'>{letter}</h1>", unsafe_allow_html=True)
+                        say_check = False
+                else:
+                    no_hand_count = 0
+                    sequence.append(keypoints)
+                    sequence = sequence[-30:]
+                
+                if len(sequence) == 30:
+                    res = model.predict(np.expand_dims(sequence, axis=0))[0]
+                    predictions.append(np.argmax(res))
+                    #3. Viz logic
+                    if res[np.argmax(res)] > threshold:
+                        pre_letter = letter
+                        letter =  actions[np.argmax(res)]
+                        if letter != pre_letter and np.unique(predictions[-10:])[0]==np.argmax(res):
+                            print(letter)
+                            sentence.append(letter)
+                            word1=word1+letter
+                            word=SpellChecker().correction(word1)
+                            word=word.upper()
+                            kpil_text.write(f"<h1 style='text-align: center; color:red;'>{word}</h1>", unsafe_allow_html=True)
+                            kpil2_text.write(f"<h1 style='text-align: center; color:red;'>{letter}</h1>", unsafe_allow_html=True)
 
-            # Make detections
-            image, results = mediapipe_detection(frame, holistic)
-            
-            # Draw landmarks
-            draw_styled_landmarks(image, results)
-            
-            # 2. Prediction logic
-            keypoints = extract_keypoints(results)
-            if not keypoints.any():
-                no_hand_count += 1 
-                if no_hand_count > 5:
-                    sequence = []
-                    sentence = []
-                    pre_letter = ''
-                    letter = ''
-                    #word=SpellChecker().correction(word1)
-                    if no_hand_count>15:
-                        word1=''
-                        word =''
-                        kpil_text.write(f"<h1 style='text-align: center; color:red;'>{word}</h1>", unsafe_allow_html=True)
-                        kpil2_text.write(f"<h1 style='text-align: center; color:red;'>{letter}</h1>", unsafe_allow_html=True)
-                    say_check = False
-            else:
-                no_hand_count = 0
-                sequence.append(keypoints)
-                sequence = sequence[-30:]
-            
-            if len(sequence) == 30:
-                res = model.predict(np.expand_dims(sequence, axis=0))[0]
-                predictions.append(np.argmax(res))
-                #3. Viz logic
-                if res[np.argmax(res)] > threshold:
-                    pre_letter = letter
-                    letter =  actions[np.argmax(res)]
-                    if letter != pre_letter and np.unique(predictions[-10:])[0]==np.argmax(res):
-                        print(letter)
-                        sentence.append(letter)
-                        word1=word1+letter
-                        word=SpellChecker().correction(word1)
-                        word=word.upper()
-                        kpil_text.write(f"<h1 style='text-align: center; color:red;'>{word}</h1>", unsafe_allow_html=True)
-                        kpil2_text.write(f"<h1 style='text-align: center; color:red;'>{letter}</h1>", unsafe_allow_html=True)
-           
-
-            # Dashboard
-            #kpil_text.write(f"<h1 style='text-align: center; color:red;'>{int(fps)}</h1>", unsafe_allow_html=True)
-            #kpil2_text.write(f"<h1 style='text-align: center; color:red;'>{letter}</h1>", unsafe_allow_html=True)
-            #kpil3_text.write(f"<h1 style='text-align: center; color:red;'>{width*height}</h1>",unsafe_allow_html=True)
-
-            frame = cv2.resize(frame,(0,0), fx=0.8, fy=0.8)
-            frame = image_resize(image=frame, width=640)
-            stframe.image(frame,channels='BGR', use_column_width=True)
-    cv2.VideoCapture(0).release()
-    cv2.destroyAllWindows()
+                frame = cv2.resize(frame,(0,0), fx=0.8, fy=0.8)
+                frame = image_resize(image=frame, width=640)
+                stframe.image(frame,channels='BGR', use_column_width=True)
