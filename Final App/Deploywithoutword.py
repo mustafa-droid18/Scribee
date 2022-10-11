@@ -1,4 +1,3 @@
-from ast import Try
 import streamlit as st
 import mediapipe as mp
 import cv2
@@ -9,14 +8,12 @@ import tensorflow as tf
 from tensorflow import keras
 from keras.models import Sequential
 from keras.layers import LSTM, Dense,Dropout
-from keras.callbacks import TensorBoard
 from fileinput import filename
-from PIL import Image, ImageDraw, ImageOps
+from PIL import Image, ImageDraw
 import os
 import requests
-from collections.abc import MutableMapping
 import time
-from pydub import AudioSegment
+from audio_recorder_streamlit import audio_recorder
 
 API_KEY_ASSEMBLYAI = '31d08ebfe16243d1b87ae65e76d2d95c' #API key provided by AssemblyAI for access
 
@@ -295,6 +292,41 @@ def getInput(file):  # To open the file
     input_text = open(file, "r")
     return input_text.read().replace('\n', '')
 
+def printing(name):
+    filename=name
+    audio_url = upload(filename)
+    save_transcript(audio_url, 'file_title')
+
+    st.sidebar.text('Original Audio')
+    st.sidebar.audio(filename)
+
+    ## Dashboard
+    paper_name = name
+    text = getInput("file_title.txt")
+    for letter in text:
+        if Dictionary.get(letter) is None and not letter.isupper():  # Make sure text is valid
+            print("'" + letter + "' is an invalid character.""\nFix text and run the program again.")
+            input("Press Enter to exit...")
+            quit()  # If file_title.txt has invalid char, exit program
+
+    if not os.path.isdir("./output"):  # If output folder doesn't exist, make one
+        os.mkdir("./output")
+    paper = Paper(paper_name)
+    print("=" * 25 + "\nWorking...")
+    paper.drawSentence(paper.convertBrailleCharacter(text))
+    i=1
+    while True:
+        image="./output/"+ name +' pg'+str(i)+'.png'
+        st.subheader('Output Image'+str(i))
+        out_image=Image.open(image)
+        st.image(out_image, use_column_width=True)
+        i=i+1
+        try: 
+            Image.open("./output/"+ name +' pg'+str(i)+'.png')
+        except:            
+            break
+    return
+
 mp_holistic =mp.solutions.holistic # Bringing holsitic model
 mp_drawing =mp.solutions.drawing_utils # Drawing utilities
 def mediapipe_detection(image,model):
@@ -438,46 +470,26 @@ elif app_mode == 'Speech To Braille':
         """,
         unsafe_allow_html=True,
     )
+    record = st.sidebar.checkbox(label="Record Audio")
+    st.sidebar.markdown('---')
     uploaded_filename= st.sidebar.file_uploader("Upload an Audio", type=["wav","mp3"])
     filename=''
+    if record:
+        audio_bytes = audio_recorder()
+        wav_file= None
+        if audio_bytes:
+            st.audio(audio_bytes, format="audio/wav")
+            wav_file = open("audio.wav", "wb")
+            wav_file.write(audio_bytes)
+            printing('audio.wav')
     if uploaded_filename:
-        with open(uploaded_filename.name,"wb") as f:
-            f.write(uploaded_filename.getbuffer())
-        filename=uploaded_filename.name
-        audio_url = upload(filename)
-        save_transcript(audio_url, 'file_title')
-
-        st.sidebar.text('Original Audio')
-        st.sidebar.audio(filename)
-
-        ## Dashboard
-        name= 'Demo'
-        paper_name = name
-        text = getInput("file_title.txt")
-        for letter in text:
-            if Dictionary.get(letter) is None and not letter.isupper():  # Make sure text is valid
-                print("'" + letter + "' is an invalid character.""\nFix text and run the program again.")
-                input("Press Enter to exit...")
-                quit()  # If file_title.txt has invalid char, exit program
-
-        if not os.path.isdir("./output"):  # If output folder doesn't exist, make one
-            os.mkdir("./output")
-        paper = Paper(paper_name)
-        print("=" * 25 + "\nWorking...")
-        paper.drawSentence(paper.convertBrailleCharacter(text))
-        i=1
-        while True:
-            image='.\output\Demo pg'+str(i)+'.png'
-            st.subheader('Output Image'+str(i))
-            out_image=Image.open(image)
-            st.image(out_image, use_column_width=True)
-            i=i+1
-            try: 
-                Image.open('.\output\Demo pg'+str(i)+'.png')
-            except:            
-                break
+        wav_file = open(uploaded_filename.name, "wb")
+        wav_file.write(uploaded_filename.getvalue())
+        printing(uploaded_filename.name)
     else:
-        pass
+        st.markdown(''' 
+        ## Speech to Braille Conversion\n
+        **Please choose one of the options mentioned in the sidebar**   ''')
 
 elif app_mode == 'Video':
 
