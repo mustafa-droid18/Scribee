@@ -13,6 +13,6 @@
   What our team proposes is a system that can convert spoken words or written text to Braille and print the same. This makes everything readable for the deaf and blind, thereby making their lives simpler.
 
 ## Technologies
-![Streamlit](https://img.shields.io/badge/-Streamlit-red)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.13.0-red)
 
 
