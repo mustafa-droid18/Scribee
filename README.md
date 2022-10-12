@@ -2,11 +2,12 @@
 
 ## Table of contents
 * [Description](#Description)
-* [Dependencies](#Dependencies)
+* [Technologies](#Technologies)
 * [Setup](#Setup)
 
 ## Description
 **Scribee! is your personal companion to learn and understand Sign Language And Braille Translation.** 
-This is a repository that contains all the files regarding the project
+- # Our Aim 
+    Helping specially-abled people gain better access to education, politics, media, and entertainment which is available in the audio-video format.
 
 
