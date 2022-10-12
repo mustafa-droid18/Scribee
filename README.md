@@ -6,6 +6,6 @@
 * [Setup](#Setup)
 
 ## Description
-**Scribee! is your personal companion to learn and understand Sign Language And Braille Translation.** \nThis is a repository that contains all the files regarding the project
+**Scribee! is your personal companion to learn and understand Sign Language And Braille Translation.** '\n'This is a repository that contains all the files regarding the project
 
 
