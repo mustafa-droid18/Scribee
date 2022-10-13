@@ -24,7 +24,7 @@
 ## Setup
 This project has been written **Python Version 3.10.7**
 
-To run the this project please run the following lines and install the dependencies 
+To run the this project please run the following lines in the command prompt terminal and install the dependencies
 ```
 pip install streamlit
 pip install mediapipe
@@ -42,7 +42,13 @@ pip install textblob
 pip install pattern
 pip install audio_recorder_streamlit
 ```
-
+## Execution
+* 1 : Download the Final App Folder in your Local System
+* 2 : Open Command Prompt terminal in that directory/file
+* 3 : Run  the following code in the terminal
+      ```
+      streamlit run DeployFinal.py
+      ```
 
 
 
