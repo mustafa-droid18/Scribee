@@ -21,6 +21,7 @@
 ![Tensorflow](https://img.shields.io/badge/Tensorflow-3.2.1-green)
 
 ## Setup
+This project has been written **Python Version 3.10.7**
 To run the this project please run the following lines and install the dependencies 
 ```
 pip install streamlit
