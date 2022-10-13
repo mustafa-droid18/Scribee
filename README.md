@@ -38,7 +38,6 @@ pip install autocorrect
 pip install textblob
 pip install pattern
 pip install audio_recorder_streamlit
-
 ```
 
 
