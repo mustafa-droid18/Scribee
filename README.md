@@ -19,7 +19,7 @@
 ![OpenCV-Python](https://img.shields.io/badge/OpenCV-1.23.3-yellow)
 ![Mediapipe](https://img.shields.io/badge/Mediapipe-1.16.0-blue)
 ![Tensorflow](https://img.shields.io/badge/Tensorflow-3.2.1-green)
-![[Python](https://img.shields.io/badge/Python-3.10.7-blueviolet)
+![Python](https://img.shields.io/badge/Python-3.10.7-blueviolet)
 
 ## Setup
 This project has been written **Python Version 3.10.7**
