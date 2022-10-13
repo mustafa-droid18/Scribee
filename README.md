@@ -4,7 +4,7 @@
 * [Description](#Description)
 * [Technologies](#Technologies)
 * [Setup](#Setup)
-* [How To Run](#Execution)
+* [Execution](#Execution)
 
 ## Description
 **Scribee! is your personal companion to learn and understand Sign Language And Braille Translation.** 
