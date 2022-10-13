@@ -45,7 +45,7 @@ pip install audio_recorder_streamlit
 ## Execution
 - Step 1 : Download the Final App Folder in your Local System
 - Step 2 : Open Command Prompt terminal in that directory/file
-- Step 3 : Run  the following code in the terminal
+- Step 3 : Run  the following command in the terminal
 ```
 streamlit run App.py
 ```
