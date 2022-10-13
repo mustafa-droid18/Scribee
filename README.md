@@ -14,7 +14,7 @@
 
 ## Technologies
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.13.0-red)
-![Assembly AI](https://img.shields.io/badge/AssemblyAI-API-Orange)
+![Assembly AI](https://img.shields.io/badge/AssemblyAI-API-orange)
 ![OpenCV-Python](https://img.shields.io/badge/OpenCV-1.23.3-yellow)
 ![Mediapipe](https://img.shields.io/badge/Mediapipe-1.16.0-blue)
 ![Tensorflow](https://img.shields.io/badge/Tensorflow-3.2.1-green)
