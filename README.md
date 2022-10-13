@@ -43,11 +43,11 @@ pip install pattern
 pip install audio_recorder_streamlit
 ```
 ## Execution
-* 1 : Download the Final App Folder in your Local System
-* 2 : Open Command Prompt terminal in that directory/file
-* 3 : Run  the following code in the terminal
+1 : Download the Final App Folder in your Local System
+2 : Open Command Prompt terminal in that directory/file
+3 : Run  the following code in the terminal
 ```
-streamlit run DeployFinal.py
+streamlit run App.py
 ```
 
 
