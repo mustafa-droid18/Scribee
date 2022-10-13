@@ -20,5 +20,28 @@
 ![Mediapipe](https://img.shields.io/badge/Mediapipe-1.16.0-blue)
 ![Tensorflow](https://img.shields.io/badge/Tensorflow-3.2.1-green)
 
+## Setup
+To run the this project please run the following lines and install the dependencies 
+```
+pip install streamlit
+pip install mediapipe
+pip install opencv-python
+pip install numpy
+pip install matplotlib
+pip install tensorflow
+pip install keras
+pip install Pillow
+pip install requests
+pip install pydub
+pip install pyspellchecker
+pip install autocorrect
+pip install textblob
+pip install pattern
+pip install audio_recorder_streamlit
+
+```
+
+
+
 
 
