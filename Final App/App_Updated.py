@@ -3,7 +3,6 @@ import mediapipe as mp
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
-import mediapipe as mp # Go through Media pipe
 import tensorflow as tf
 from tensorflow import keras
 from keras.models import Sequential
@@ -293,40 +292,42 @@ def getInput(file):  # To open the file
     input_text = open(file, "r")
     return input_text.read().replace('\n', '')
 
-def printing(name):
-    filename=name
-    audio_url = upload(filename)
-    save_transcript(audio_url, 'file_title')
+def printing(filename):
+    try:
+        audio_url = upload(filename)
+        save_transcript(audio_url, 'file_title')
 
-    st.sidebar.text('Original Audio')
-    st.sidebar.audio(filename)
+        st.sidebar.text('Original Audio')
+        st.sidebar.audio(filename)
 
-    ## Dashboard
-    paper_name = name
-    text = getInput("file_title.txt")
-    for letter in text:
-        if Dictionary.get(letter) is None and not letter.isupper():  # Make sure text is valid
-            print("'" + letter + "' is an invalid character.""\nFix text and run the program again.")
-            input("Press Enter to exit...")
-            quit()  # If file_title.txt has invalid char, exit program
+        paper_name = filename
+        text = getInput("file_title.txt")
 
-    if not os.path.isdir("./output"):  # If output folder doesn't exist, make one
-        os.mkdir("./output")
-    paper = Paper(paper_name)
-    print("=" * 25 + "\nWorking...")
-    paper.drawSentence(paper.convertBrailleCharacter(text))
-    i=1
-    while True:
-        image="./output/"+ name +' pg'+str(i)+'.png'
-        st.subheader('Output Image'+str(i))
-        out_image=Image.open(image)
-        st.image(out_image, use_column_width=True)
-        i=i+1
-        try: 
-            Image.open("./output/"+ name +' pg'+str(i)+'.png')
-        except:            
-            break
-    return
+        # Check for invalid characters
+        invalid_chars = [c for c in text if Dictionary.get(c.lower()) is None and not c.isupper()]
+        if invalid_chars:
+            st.error(f"Invalid characters found in transcript: {set(invalid_chars)}")
+            return
+
+        if not os.path.isdir("./output"):
+            os.mkdir("./output")
+
+        paper = Paper(paper_name)
+        paper.drawSentence(paper.convertBrailleCharacter(text))
+
+        i = 1
+        while True:
+            img_path = f"./output/{filename} pg{i}.png"
+            try:
+                image = Image.open(img_path)
+                st.subheader(f'Output Image {i}')
+                st.image(image, use_column_width=True)
+                i += 1
+            except FileNotFoundError:
+                break
+
+    except Exception as e:
+        st.error(f"Something went wrong: {e}")
 
 mp_holistic =mp.solutions.holistic # Bringing holsitic model
 mp_drawing =mp.solutions.drawing_utils # Drawing utilities
@@ -372,90 +373,9 @@ model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4), loss='cate
 model.load_weights('Trained_on_all_letters.h5')
 
 
-st.title('Scribee!')
+def run():
+    st.title('Scribee!')
 
-st.markdown(
-    """
-    <style>
-    [data-testid="stSidebar"][aria-expanded="true"] > div:first-child{
-        width: 350px
-    }
-    [data-testid="stSidebar"][aria-expanded="false"] > div:first-child{
-        width: 350px
-        margin-left: -350px
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-# Create Sidebar
-st.sidebar.title('Sidebar')
-st.sidebar.subheader('Parameter')
-
-# Define available pages in selection box
-app_mode = st.sidebar.selectbox(
-    'App Mode',
-    ['About','Speech To Braille','Video']
-)
-
-# Resize Images to fit Container
-@st.cache()
-# Get Image Dimensions
-def image_resize(image, width=None, height=None, inter=cv2.INTER_AREA):
-    dim = None
-    (h,w) = image.shape[:2]
-
-    if width is None and height is None:
-        return image
-
-    if width is None:
-        r = width/float(w)
-        dim = (int(w*r),height)
-
-    else:
-        r = width/float(w)
-        dim = width, int(h*r)
-
-    # Resize image
-    resized = cv2.resize(image,dim,interpolation=inter)
-
-    return resized
-
-# About Page
-
-if app_mode == 'About':
-    st.markdown('''
-                ## About \n
-                Scribee! is your personal companion to learn and understand Sign Language And Braille Translation.\n
-                Our goal is helping visually and verbally differently abled people gain better access to education, politics, media, and entertainment which is available in the audio-video format.\n
-                **StreamLit** is used to create the Web Graphical User Interface (GUI) \n
-
-                
-                - [Github](https://github.com/mustafa-droid18/Scribee) \n
-    ''')
-
-## Add Sidebar and Window style
-    st.markdown(
-    """
-    <style>
-    [data-testid="stSidebar"][aria-expanded="true"] > div:first-child{
-        width: 350px
-    }
-    [data-testid="stSidebar"][aria-expanded="false"] > div:first-child{
-        width: 350px
-        margin-left: -350px
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-elif app_mode == 'Speech To Braille':
-    
-    st.sidebar.markdown('---')
-
-    ## Add Sidebar and Window style
     st.markdown(
         """
         <style>
@@ -470,137 +390,226 @@ elif app_mode == 'Speech To Braille':
         """,
         unsafe_allow_html=True,
     )
-    record = st.sidebar.checkbox(label="Record Audio")
-    st.sidebar.markdown('---')
-    uploaded_filename= st.sidebar.file_uploader("Upload an Audio", type=["wav","mp3"])
-    filename=''
-    if record:
-        audio_bytes = audio_recorder()
-        wav_file= None
+
+    # Create Sidebar
+    st.sidebar.title('Sidebar')
+    st.sidebar.subheader('Parameter')
+
+    # Define available pages in selection box
+    app_mode = st.sidebar.selectbox(
+        'App Mode',
+        ['About','Speech To Braille','Video']
+    )
+
+    # Resize Images to fit Container
+    @st.cache_data
+    # Get Image Dimensions
+    def image_resize(image, width=None, height=None, inter=cv2.INTER_AREA):
+        dim = None
+        (h,w) = image.shape[:2]
+
+        if width is None and height is None:
+            return image
+
+        if width is None:
+            r = width/float(w)
+            dim = (int(w*r),height)
+
+        else:
+            r = width/float(w)
+            dim = width, int(h*r)
+
+        # Resize image
+        resized = cv2.resize(image,dim,interpolation=inter)
+
+        return resized
+
+    # About Page
+
+    if app_mode == 'About':
+        st.markdown('''
+                    ## About \n
+                    Scribee! is your personal companion to learn and understand Sign Language And Braille Translation.\n
+                    Our goal is helping visually and verbally differently abled people gain better access to education, politics, media, and entertainment which is available in the audio-video format.\n
+                    **StreamLit** is used to create the Web Graphical User Interface (GUI) \n
+
+                    
+                    - [Github](https://github.com/mustafa-droid18/Scribee) \n
+        ''')
+
+    ## Add Sidebar and Window style
+        st.markdown(
+        """
+        <style>
+        [data-testid="stSidebar"][aria-expanded="true"] > div:first-child{
+            width: 350px
+        }
+        [data-testid="stSidebar"][aria-expanded="false"] > div:first-child{
+            width: 350px
+            margin-left: -350px
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    elif app_mode == 'Speech To Braille':
+        
+        st.sidebar.markdown('---')
+
+        ## Add Sidebar and Window style
+        st.markdown(
+            """
+            <style>
+            [data-testid="stSidebar"][aria-expanded="true"] > div:first-child{
+                width: 350px
+            }
+            [data-testid="stSidebar"][aria-expanded="false"] > div:first-child{
+                width: 350px
+                margin-left: -350px
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+        record = st.sidebar.checkbox(label="Record Audio")
+        st.sidebar.markdown('---')
+        uploaded_filename = st.sidebar.file_uploader("Upload an Audio", type=["wav", "mp3"])
+        audio_bytes = None
+
+        if record:
+            audio_bytes = audio_recorder()
+
         if audio_bytes:
             st.audio(audio_bytes, format="audio/wav")
-            wav_file = open("audio.wav", "wb")
-            wav_file.write(audio_bytes)
-            printing('audio.wav')
-    if uploaded_filename:
-        wav_file = open(uploaded_filename.name, "wb")
-        wav_file.write(uploaded_filename.getvalue())
-        printing(uploaded_filename.name)
-    else:
-        st.markdown(''' 
-        ## Speech to Braille Conversion\n
-        **Please choose one of the options mentioned in the sidebar**   ''')
-        
+            with open("audio.wav", "wb") as f:
+                f.write(audio_bytes)
+            printing("audio.wav")
 
-elif app_mode == 'Video':
+        elif uploaded_filename is not None:
+            with open(uploaded_filename.name, "wb") as f:
+                f.write(uploaded_filename.getvalue())
+            printing(uploaded_filename.name)
 
-    # st.set_option('deprecation.showfileUploaderEncoding', False)
+        else:
+            st.markdown(''' 
+                ## Speech to Braille Conversion\n
+                **Please choose one of the options mentioned in the sidebar**  
+            ''')
+            
 
-    use_webcam = st.sidebar.checkbox('Use Webcam')
+    elif app_mode == 'Video':
 
-    ## Add Sidebar and Window style
-    st.markdown(
-        """
-        <style>
-        [data-testid="stSidebar"][aria-expanded="true"] > div:first-child{
-            width: 350px
-        }
-        [data-testid="stSidebar"][aria-expanded="false"] > div:first-child{
-            width: 350px
-            margin-left: -350px
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+        # st.set_option('deprecation.showfileUploaderEncoding', False)
 
-    st.sidebar.markdown('---')
-    detection_confidence = st.sidebar.slider('Min Detection Confidence', min_value=0.0,max_value=1.0,value=0.5)
-    tracking_confidence = st.sidebar.slider('Min Tracking Confidence', min_value=0.0,max_value=1.0,value=0.5)
-    st.sidebar.markdown('---')
+        use_webcam = st.sidebar.checkbox('Use Webcam')
 
-    ## Get Video
-    if use_webcam:
-        stframe = st.empty()
-        video = cv2.VideoCapture(0)
+        ## Add Sidebar and Window style
+        st.markdown(
+            """
+            <style>
+            [data-testid="stSidebar"][aria-expanded="true"] > div:first-child{
+                width: 350px
+            }
+            [data-testid="stSidebar"][aria-expanded="false"] > div:first-child{
+                width: 350px
+                margin-left: -350px
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
 
-        width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
-        height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        fps_input = int(video.get(cv2.CAP_PROP_FPS))
+        st.sidebar.markdown('---')
+        detection_confidence = st.sidebar.slider('Min Detection Confidence', min_value=0.0,max_value=1.0,value=0.5)
+        tracking_confidence = st.sidebar.slider('Min Tracking Confidence', min_value=0.0,max_value=1.0,value=0.5)
+        st.sidebar.markdown('---')
 
-        
-        sequence = []
-        sentence=[]
-        predictions=[]
-        no_hand_count = 0
-        threshold = 0.5
-        say_check = False
-        cap = cv2.VideoCapture(0)
-        letter = ""
-        pre_letter = ""
-        word=""
-        word1=""
+        ## Get Video
+        if use_webcam:
+            stframe = st.empty()
+            video = cv2.VideoCapture(0)
 
-        kpil, kpil2 = st.columns(2)
+            width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+            height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            fps_input = int(video.get(cv2.CAP_PROP_FPS))
 
-        with kpil:
-            st.markdown('**Word**')
-            kpil_text = st.markdown('')
+            
+            sequence = []
+            sentence=[]
+            predictions=[]
+            no_hand_count = 0
+            threshold = 0.5
+            say_check = False
+            cap = cv2.VideoCapture(0)
+            letter = ""
+            pre_letter = ""
+            word=""
+            word1=""
 
-        with kpil2:
-            st.markdown('**Letter**')
-            kpil2_text = st.markdown('')
+            kpil, kpil2 = st.columns(2)
 
-        st.markdown('<hr/>', unsafe_allow_html=True)
+            with kpil:
+                st.markdown('**Word**')
+                kpil_text = st.markdown('')
 
-        with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
-            while cap.isOpened():
+            with kpil2:
+                st.markdown('**Letter**')
+                kpil2_text = st.markdown('')
 
-                # Read feed
-                ret, frame = cap.read()
+            st.markdown('<hr/>', unsafe_allow_html=True)
 
-                # Make detections
-                image, results = mediapipe_detection(frame, holistic)
-                
-                # Draw landmarks
-                draw_styled_landmarks(image, results)
-                
-                # 2. Prediction logic
-                keypoints = extract_keypoints(results)
-                if not keypoints.any():
-                    no_hand_count += 1 
-                    if no_hand_count > 5:
-                        sequence = []
-                        sentence = []
-                        pre_letter = ''
-                        letter = ''
-                        if no_hand_count>15:
-                            word1=''
-                            word =''
-                            kpil_text.write(f"<h1 style='text-align: center; color:red;'>{word}</h1>", unsafe_allow_html=True)
-                            kpil2_text.write(f"<h1 style='text-align: center; color:red;'>{letter}</h1>", unsafe_allow_html=True)
-                        say_check = False
-                else:
-                    no_hand_count = 0
-                    sequence.append(keypoints)
-                    sequence = sequence[-30:]
-                
-                if len(sequence) == 30:
-                    res = model.predict(np.expand_dims(sequence, axis=0))[0]
-                    predictions.append(np.argmax(res))
-                    #3. Viz logic
-                    if res[np.argmax(res)] > threshold:
-                        pre_letter = letter
-                        letter =  actions[np.argmax(res)]
-                        if letter != pre_letter and np.unique(predictions[-10:])[0]==np.argmax(res):
-                            print(letter)
-                            sentence.append(letter)
-                            word1=word1+letter
-                            word=SpellChecker().correction(word1)
-                            word=word.upper()
-                            kpil_text.write(f"<h1 style='text-align: center; color:red;'>{word}</h1>", unsafe_allow_html=True)
-                            kpil2_text.write(f"<h1 style='text-align: center; color:red;'>{letter}</h1>", unsafe_allow_html=True)
+            with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
+                while cap.isOpened():
 
-                frame = cv2.resize(frame,(0,0), fx=0.8, fy=0.8)
-                frame = image_resize(image=frame, width=640)
-                stframe.image(frame,channels='BGR', use_column_width=True)
+                    # Read feed
+                    ret, frame = cap.read()
+
+                    # Make detections
+                    image, results = mediapipe_detection(frame, holistic)
+                    
+                    # Draw landmarks
+                    draw_styled_landmarks(image, results)
+                    
+                    # 2. Prediction logic
+                    keypoints = extract_keypoints(results)
+                    if not keypoints.any():
+                        no_hand_count += 1 
+                        if no_hand_count > 5:
+                            sequence = []
+                            sentence = []
+                            pre_letter = ''
+                            letter = ''
+                            if no_hand_count>15:
+                                word1=''
+                                word =''
+                                kpil_text.write(f"<h1 style='text-align: center; color:red;'>{word}</h1>", unsafe_allow_html=True)
+                                kpil2_text.write(f"<h1 style='text-align: center; color:red;'>{letter}</h1>", unsafe_allow_html=True)
+                            say_check = False
+                    else:
+                        no_hand_count = 0
+                        sequence.append(keypoints)
+                        sequence = sequence[-30:]
+                    
+                    if len(sequence) == 30:
+                        res = model.predict(np.expand_dims(sequence, axis=0))[0]
+                        predictions.append(np.argmax(res))
+                        #3. Viz logic
+                        if res[np.argmax(res)] > threshold:
+                            pre_letter = letter
+                            letter =  actions[np.argmax(res)]
+                            if letter != pre_letter and np.unique(predictions[-10:])[0]==np.argmax(res):
+                                print(letter)
+                                sentence.append(letter)
+                                word1=word1+letter
+                                word=SpellChecker().correction(word1)
+                                word=word.upper()
+                                kpil_text.write(f"<h1 style='text-align: center; color:red;'>{word}</h1>", unsafe_allow_html=True)
+                                kpil2_text.write(f"<h1 style='text-align: center; color:red;'>{letter}</h1>", unsafe_allow_html=True)
+
+                    frame = cv2.resize(frame,(0,0), fx=0.8, fy=0.8)
+                    frame = image_resize(image=frame, width=640)
+                    stframe.image(frame,channels='BGR', use_column_width=True)
+
+if __name__ == "__main__":
+    run()
